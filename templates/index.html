@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ruta Óptima</title>
+</head>
+<body>
+    <h1>Ruta Óptima</h1>
+    <form action="/" method="post">
+        <input type="submit" value="Mostrar Ruta Óptima">
+    </form>
+    {% if ruta_optima %}
+        <h2>Ruta Óptima:</h2>
+        <p>{{ ruta_optima|join(', ') }}</p>
+        <h2>Distancia Total:</h2>
+        <p>{{ distancia_total }}</p>
+    {% else %}
+        <p>Presiona el botón para obtener la ruta óptima.</p>
+    {% endif %}
+
+    <h2>Agregar Nueva Ciudad</h2>
+    <form action="/agregar_ciudad" method="post">
+        <label for="ciudad">Nombre de la Ciudad:</label>
+        <input type="text" id="ciudad" name="ciudad" required><br>
+        <label for="latitud">Latitud:</label>
+        <input type="text" id="latitud" name="latitud" required><br>
+        <label for="longitud">Longitud:</label>
+        <input type="text" id="longitud" name="longitud" required><br>
+        <input type="submit" value="Agregar Ciudad">
+    </form>
+
+    <h2>Lista de Ciudades</h2>
+    <ul>
+        {% for ciudad, coordenadas in ciudades.items() %}
+            <li>{{ ciudad }} ({{ coordenadas[0] }}, {{ coordenadas[1] }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
