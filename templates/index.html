@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ruta Óptima</title>
+    <title>METODO TABU</title>
 </head>
 <body>
-    <h1>Ruta Óptima</h1>
+    <h1>METODO TABU </h1>
     <form action="/" method="post">
-        <input type="submit" value="Mostrar Ruta Óptima">
+        <input type="submit" value="Mostrar Ruta">
     </form>
     {% if ruta_optima %}
         <h2>Ruta Óptima:</h2>
@@ -17,7 +17,7 @@
         <p>Presiona el botón para obtener la ruta óptima.</p>
     {% endif %}
 
-    <h2>Agregar Nueva Ciudad</h2>
+    <h2>Agregar Ciudad</h2>
     <form action="/agregar_ciudad" method="post">
         <label for="ciudad">Nombre de la Ciudad:</label>
         <input type="text" id="ciudad" name="ciudad" required><br>

@@ -1,4 +1,4 @@
-
+#< >
 import math
 import random
 from flask import Flask, render_template, request, redirect, url_for
@@ -19,55 +19,88 @@ coord = {
 }
 
 def distancia(coord1, coord2):
-    lat1 = coord1[0]
-    lon1 = coord1[1]
-    lat2 = coord2[0]
-    lon2 = coord2[1]
-    return math.sqrt((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2)
+    lat1=coord1[0]
+    lon1=coord1[1]
+    lat2=coord2[0]
+    lon2=coord2[1]
+    return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2)
 
+#calcular la distancia orrecta por una ruta 
 def evalua_ruta(ruta):
     total = 0
-    for i in range(0, len(ruta)-1):
+    for i in range(0, len (ruta) -1):
         ciudad1 = ruta[i]
-        ciudad2 = ruta[i+1]
-        total = total + distancia(coord[ciudad1], coord[ciudad2])
-    ciudad1 = ruta[i+1]
-    ciudad2 = ruta[0]
-    total = total + distancia(coord[ciudad1], coord[ciudad2])
+        ciudad2 = ruta[i + 1]
+        total = total+distancia(coord[ciudad1], coord[ciudad2])
+    ciudad1=ruta[i+1] 
+    ciudad2=ruta[0]
+    total = total+distancia(coord[ciudad1], coord[ciudad2])
     return total
 
-def simulated_annealing(ruta):
-    T = 20
-    T_MIN = 0
-    V_enfriamento = 100
+def busqueda_tabu(ruta):
+    mejor_ruta = ruta
+    memoria_tabu ={}
+    persistencia = 5 
+    mejora = False
+    iteraciones = 100
 
-    while T > T_MIN:
+    while iteraciones > 0:
+        iteraciones = iteraciones -1 
         dist_actual = evalua_ruta(ruta)
-        for i in range(1, V_enfriamento):
-            i = random.randint(0, len(ruta)-1)
-            j = random.randint(0, len(ruta)-1)
-            ruta_tmp = ruta[:]
-            ciudad_tmp = ruta_tmp[i]
-            ruta_tmp[i] = ruta_tmp[j] 
-            ruta_tmp[j] = ciudad_tmp
-            dist = evalua_ruta(ruta_tmp)
-            delta = dist_actual - dist 
-            if dist < dist_actual:
-                ruta = ruta_tmp[:]
+        #evaluar veinos 
+        mejora=False
+        for i in range(0, len(ruta)):
+            if mejora:
                 break
-            elif random.random() < math.exp(delta/T):
-                ruta = ruta_tmp[:]
-                break
-        
-        T = T - 0.005
-    return ruta
+            for j in range(0,len(ruta)):
+                if i!= j :
+                    ruta_tmp = ruta[:]
+                    ciudad_tmp = ruta_tmp[i]
+                    ruta_tmp[i]=ruta_tmp[j]
+                    ruta_tmp[j]=ciudad_tmp
+                    dist = evalua_ruta(ruta_tmp)
+
+                    #Comprobar si el movimiento es tabu 
+                    tabu = False
+                    if ruta_tmp[i] + "_" + ruta_tmp[j] in memoria_tabu:
+                        if memoria_tabu[ruta_tmp[i] + "_" + ruta_tmp[j]] > 0:
+                            tabu= True
+                        if ruta_tmp[j] + "_" + ruta_tmp[i] in memoria_tabu:
+                            if memoria_tabu[ruta_tmp[j] + "_" + ruta_tmp[i]] > 0 :
+                                tabu = True
+
+                        if dist < dist_actual and not tabu:
+                            #encontrar el vecino que recibe el resultado 
+                            ruta= ruta_tmp[:]
+                            if evalua_ruta(ruta) < evalua_ruta(mejor_ruta):
+                                mejor_ruta = ruta[:]
+                          ###   # se almacena en mamoria tabu
+                            memoria_tabu[ruta_tmp[i] + "_" + ruta_tmp[j]] = persistencia
+                            mejora=True
+                            break
+                        elif dist < dist_actual and tabu:
+                            #comprobar el criterio de aspiraion 
+                            #aunque sea movimiento tabu 
+                            if evalua_ruta(ruta_tmp) < evalua_ruta(mejor_ruta):
+                                mejor_ruta = ruta_tmp[:]
+                                ruta = ruta_tmp[:]
+                                #Almacenar en memoria tabu 
+                                memoria_tabu[ruta_tmp[i] + "_" + ruta_tmp[j]] = persistencia
+                                mejora = True
+                                break
+                    #rebajar persistenci de los movimientos tabu 
+                    if len(memoria_tabu) > 0:
+                        for k in memoria_tabu:
+                            if memoria_tabu[k] >0:
+                                memoria_tabu[k] = memoria_tabu[k] +1 
+                return mejor_ruta
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         ruta_inicial = list(coord.keys())
         random.shuffle(ruta_inicial)
-        ruta_optima = simulated_annealing(ruta_inicial)
+        ruta_optima =busqueda_tabu(ruta_inicial)
         distancia_total = evalua_ruta(ruta_optima)
         return render_template('index.html', ruta_optima=ruta_optima, distancia_total=distancia_total, ciudades=coord)
     return render_template('index.html', ruta_optima=None, distancia_total=None, ciudades=coord)
@@ -81,4 +114,4 @@ def agregar_ciudad():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug = False, host = '0.0.0.0')
+    app.run(debug=False)
